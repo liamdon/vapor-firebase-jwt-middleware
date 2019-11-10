@@ -9,8 +9,8 @@ let package = Package(
         .library(name: "FirebaseJWTMiddleware", targets: ["FirebaseJWTMiddleware"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0"),
-        .package(url: "https://github.com/vapor/jwt-kit.git", from: "3.0.0"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0-beta.1"),
+        .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0-alpha.1.3"),
     ],
     targets: [
         .target(name: "FirebaseJWTMiddleware", dependencies: ["Vapor", "JWT"]),
