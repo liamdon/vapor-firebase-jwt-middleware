@@ -17,7 +17,8 @@ public class TokenVerifier {
             let certificates: [GoogleCertificate]? = try GoogleCertificateFetcher.fetch()
             let jwtSigners: JWTSigners = JWTSigners()
             certificates?.forEach({ (googleCertificate) in
-                if let rsaKey = try? RSAKey.public(pem: googleCertificate.certificate.bytes) {
+                if let data = googleCertificate.certificate.data(using: .utf8),
+                    let rsaKey = try? RSAKey.public(pem: [UInt8](data)) {
                     let signer = JWTSigner.rs256(key: rsaKey)
                     jwtSigners.use(signer, kid: googleCertificate.kid)
                 }
