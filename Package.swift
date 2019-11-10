@@ -13,7 +13,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0-beta.1"),
-        .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0-alpha.1.3"),
+        .package(url: "https://github.com/liamdon/jwt-kit.git", from: "4.0.0-alpha.1.3a"),
     ],
     targets: [
         .target(name: "FirebaseJWTMiddleware", dependencies: ["Vapor", "JWTKit"]),
