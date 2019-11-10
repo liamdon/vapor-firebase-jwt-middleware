@@ -24,6 +24,8 @@ public class TokenVerifier {
             })
             let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: jwtSigners)
             return jwt.payload
+        } catch let error as JWTError {
+            throw error
         } catch {
             throw JWTError.signatureVerifictionFailed
         }
