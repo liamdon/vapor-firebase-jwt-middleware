@@ -6,17 +6,19 @@ open class FirebaseJWTMiddleware: Middleware {
     public init() {}
     
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        if let token = request.headers[.authorization].first {
-            do {
-                try TokenVerifier.verify(token)
-                return next.respond(to: request)
-            } catch let error as JWTError {
-                return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: error.reason))
-            } catch let error {
-                return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: error.localizedDescription))
-            }
-        } else {
+
+        guard let token = request.headers[.authorization].first else {
             return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: "No Access Token"))
+        }
+
+        return TokenVerifier.verify(token, request.client)
+            .flatMap({ (payload) -> EventLoopFuture<Response> in
+                return next.respond(to: request)
+            }).flatMapError { (error) -> EventLoopFuture<Response> in
+                if let error = error as? JWTError {
+                    return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: error.reason))
+                }
+                return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
     }
 }
