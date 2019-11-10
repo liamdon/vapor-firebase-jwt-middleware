@@ -5,7 +5,7 @@
 //  Created by Baris Atamer on 23.08.19.
 //
 
-import JWT
+import JWTKit
 
 public struct FirebaseJWTPayload: JWTPayload {
     var issuer: IssuerClaim
@@ -33,7 +33,7 @@ public struct FirebaseJWTPayload: JWTPayload {
     
     public func verify(using signer: JWTSigner) throws {
         guard self.issuer.value == FirebaseJWTMiddlewareConfig.shared.issuer else {
-            throw JWTError.verificationFailed
+            throw JWTError.claimVerificationFailure(name: "Firebase", reason: "Payload issuer does not match config")
         }
         try self.expirationAt.verifyNotExpired()
     }

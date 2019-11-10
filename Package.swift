@@ -5,6 +5,9 @@ import PackageDescription
 
 let package = Package(
     name: "FirebaseJWTMiddleware",
+    platforms: [
+        .macOS(.v10_14)
+    ],
     products: [
         .library(name: "FirebaseJWTMiddleware", targets: ["FirebaseJWTMiddleware"]),
     ],

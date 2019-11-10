@@ -5,7 +5,7 @@
 //  Created by Baris Atamer on 23.08.19.
 //
 
-import JWT
+import JWTKit
 
 /// Config options for a `FirebaseJWTPayload`
 public struct FirebaseJWTMiddlewareConfig {

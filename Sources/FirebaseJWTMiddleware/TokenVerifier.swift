@@ -5,8 +5,8 @@
 //  Created by Baris Atamer on 23.08.19.
 //
 
-import JWT
-import Crypto
+import JWTKit
+import OpenCrypto
 
 public class TokenVerifier {
     
@@ -17,15 +17,15 @@ public class TokenVerifier {
             let certificates: [GoogleCertificate]? = try GoogleCertificateFetcher.fetch()
             let jwtSigners: JWTSigners = JWTSigners()
             certificates?.forEach({ (googleCertificate) in
-                if let rsaKey = try? RSAKey.public(certificate: googleCertificate.certificate.bytes) {
+                if let rsaKey = try? RSAKey.public(pem: googleCertificate.certificate.bytes) {
                     let signer = JWTSigner.rs256(key: rsaKey)
                     jwtSigners.use(signer, kid: googleCertificate.kid)
                 }
             })
-            let jwt = try JWT<FirebaseJWTPayload>(from: token, verifiedUsing: jwtSigners)
+            let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: jwtSigners)
             return jwt.payload
         } catch {
-            throw JWTError.verificationFailed
+            throw JWTError.signatureVerifictionFailed
         }
     }
 }

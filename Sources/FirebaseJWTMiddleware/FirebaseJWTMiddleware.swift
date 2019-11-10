@@ -1,20 +1,22 @@
 import Vapor
-import JWT
+import JWTKit
 
 open class FirebaseJWTMiddleware: Middleware {
-    
+
     public init() {}
     
-    public func respond(to request: Request, chainingTo next: Responder) throws -> EventLoopFuture<Response> {
-        if let token = request.http.headers[.authorization].first {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        if let token = request.headers[.authorization].first {
             do {
                 try TokenVerifier.verify(token)
-                return try next.respond(to: request)
+                return next.respond(to: request)
             } catch let error as JWTError {
-                throw Abort(.unauthorized, reason: error.reason)
+                return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: error.reason))
+            } catch let error {
+                return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: error.localizedDescription))
             }
         } else {
-            throw Abort(.unauthorized, reason: "No Access Token")
+            return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: "No Access Token"))
         }
     }
 }
