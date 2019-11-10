@@ -30,10 +30,10 @@
       },
       {
         "package": "jwt-kit",
-        "repositoryURL": "https://github.com/vapor/jwt-kit.git",
+        "repositoryURL": "https://github.com/liamdon/jwt-kit.git",
         "state": {
-          "branch": null,
-          "revision": "f6793d97dd21fc05c297bab6d4c1d70fdf2c0d9f",
+          "branch": "master",
+          "revision": "58a60d8c9b797eda4b5c52f18ee19e75871dcd73",
           "version": null
         }
       },
