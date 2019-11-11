@@ -20,12 +20,14 @@ public class TokenVerifier {
     public class func verify(_ token: String, _ httpClient: Client) -> EventLoopFuture<FirebaseJWTPayload> {
         return TokenVerifier.getSigners(httpClient: httpClient).flatMap({ (signers) -> EventLoopFuture<FirebaseJWTPayload> in
             let promise = httpClient.eventLoopGroup.next().makePromise(of: FirebaseJWTPayload.self)
-            do {
-                let token = token.removeBearer()
-                let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: signers)
-                promise.succeed(jwt.payload)
-            } catch let error {
-                promise.fail(error)
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let token = token.removeBearer()
+                    let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: signers)
+                    promise.succeed(jwt.payload)
+                } catch let error {
+                    promise.fail(error)
+                }
             }
             return promise.futureResult
         })
