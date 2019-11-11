@@ -41,29 +41,33 @@ public class TokenVerifier {
             return promise.futureResult
         }
 
-        return httpClient.get(url).flatMap({ (response) -> EventLoopFuture<JWTSigners> in
-
-            guard
-                let responseBody = response.body,
-                let responseString = responseBody.getString(at: 0, length: responseBody.readableBytes) else {
-                    promise.fail(JWTError.invalidJWK)
-                    return promise.futureResult
-            }
-
-            do {
-                let signers = JWTSigners()
-                try signers.use(jwksJSON: responseString)
-
-                // Cache signers by max-age if possible
-                TokenVerifier.cacheSigners(signers, response.headers)
-
-                promise.succeed(signers)
-            } catch let error {
+        httpClient.get(url).whenComplete { (result) in
+            switch result {
+            case .failure(let error):
                 promise.fail(error)
-            }
+            case .success(let response):
+                guard
+                    let responseBody = response.body,
+                    let responseString = responseBody.getString(at: 0, length: responseBody.readableBytes) else {
+                        promise.fail(JWTError.invalidJWK)
+                        return
+                }
 
-            return promise.futureResult
-        })
+                do {
+                    let signers = JWTSigners()
+                    try signers.use(jwksJSON: responseString)
+
+                    // Cache signers by max-age if possible
+                    TokenVerifier.cacheSigners(signers, response.headers)
+
+                    promise.succeed(signers)
+                } catch let error {
+                    promise.fail(error)
+                }
+            }
+        }
+
+        return promise.futureResult
 
     }
 
