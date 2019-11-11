@@ -1,6 +1,8 @@
 import Vapor
 import JWTKit
 
+let FireBaseJWTPayloadKey = "fireWT"
+
 open class FirebaseJWTMiddleware: Middleware {
 
     public init() {}
@@ -13,6 +15,7 @@ open class FirebaseJWTMiddleware: Middleware {
 
         return TokenVerifier.verify(token, request.client)
             .flatMap({ (payload) -> EventLoopFuture<Response> in
+                request.userInfo[FireBaseJWTPayloadKey] = payload
                 return next.respond(to: request)
             }).flatMapError { (error) -> EventLoopFuture<Response> in
                 if let error = error as? JWTError {
@@ -20,6 +23,12 @@ open class FirebaseJWTMiddleware: Middleware {
                 }
                 return request.eventLoop.makeFailedFuture(Abort(.unauthorized))
         }
+    }
+}
+
+extension Request {
+    var firebaseJWTPayload: FirebaseJWTPayload? {
+        return self.userInfo[FireBaseJWTPayloadKey] as? FirebaseJWTPayload
     }
 }
 
