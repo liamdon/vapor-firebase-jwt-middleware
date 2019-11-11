@@ -27,7 +27,7 @@ open class FirebaseJWTMiddleware: Middleware {
 }
 
 extension Request {
-    var firebaseJWTPayload: FirebaseJWTPayload? {
+    public var firebaseJWTPayload: FirebaseJWTPayload? {
         return self.userInfo[FireBaseJWTPayloadKey] as? FirebaseJWTPayload
     }
 }
