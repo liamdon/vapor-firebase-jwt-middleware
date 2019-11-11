@@ -17,14 +17,14 @@ public class TokenVerifier {
     private static var cacheExpiryEpoch: TimeInterval = Date.timeIntervalSinceReferenceDate
     
     @discardableResult
-    public class func verify(_ token: String, _ httpClient: Client) -> EventLoopFuture<FirebaseJWTPayload> {
+    public class func verify(_ token: String, httpClient: Client, on reqEventLoop: EventLoop) -> EventLoopFuture<FirebaseJWTPayload> {
         return TokenVerifier.getSigners(httpClient: httpClient).flatMap({ (signers) -> EventLoopFuture<FirebaseJWTPayload> in
             let token = token.removeBearer()
             do {
                 let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: signers)
-                return httpClient.eventLoopGroup.next().makeSucceededFuture(jwt.payload)
+                return reqEventLoop.next().makeSucceededFuture(jwt.payload)
             } catch let error {
-                return httpClient.eventLoopGroup.next().makeFailedFuture(error)
+                return reqEventLoop.next().makeFailedFuture(error)
             }
         })
     }

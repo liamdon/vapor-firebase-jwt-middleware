@@ -22,7 +22,7 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6IjI1MDgxMWNkYzYwOWQ5MGY5ODE1MTE5MWIyYmM5YmQwY2ViOWMw
 
         try app.boot()
 
-        let result = try TokenVerifier.verify(token, app.client).wait()
+        let result = try TokenVerifier.verify(token, httpClient: app.client, on: app.client.eventLoopGroup.next()).wait()
         print(result)
 
     }
