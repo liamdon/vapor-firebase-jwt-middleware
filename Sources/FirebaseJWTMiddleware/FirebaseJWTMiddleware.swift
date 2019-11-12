@@ -13,7 +13,7 @@ open class FirebaseJWTMiddleware: Middleware {
             return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: "No Access Token"))
         }
 
-        return TokenVerifier.verify(token, httpClient: request.client, on: request.eventLoop)
+        return TokenVerifier.verify(token, request: request)
             .flatMap({ (payload) -> EventLoopFuture<Response> in
                 request.userInfo[FireBaseJWTPayloadKey] = payload
                 return next.respond(to: request)

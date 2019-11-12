@@ -8,7 +8,7 @@ final class FirebaseJWTMiddlewareTests: XCTestCase {
 
         // Paste your own token here
         let token = """
-eyJhbGciOiJSUzI1NiIsImtpZCI6IjI1MDgxMWNkYzYwOWQ5MGY5ODE1MTE5MWIyYmM5YmQwY2ViOWMwMDQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vZmlyZXRvZG8tZTk3YTciLCJhdWQiOiJmaXJldG9kby1lOTdhNyIsImF1dGhfdGltZSI6MTU3MzQ0MTUwMCwidXNlcl9pZCI6IkdvOTlqejROZE9ka0wxaGgxNHRDdVBQUzhKQjMiLCJzdWIiOiJHbzk5ano0TmRPZGtMMWhoMTR0Q3VQUFM4SkIzIiwiaWF0IjoxNTczNDQxNTAwLCJleHAiOjE1NzM0NDUxMDAsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnt9LCJzaWduX2luX3Byb3ZpZGVyIjoiY3VzdG9tIn19.n1W5Nu5PJKEeElJ0Hw2hOG8FVuqZCTmilex-9tY-A4QqoGk2STvemxNXluo5Iedcyp0tNYzyhGArJOOJQrSShvkgPqfK5LKuT37Hlm9a4baZJ0c_ovQgHH_DLPJJ2nVLGlG-jTDFGU283mzXKg7w8s2ntt2HSgvKrfCbJ6V0TqkSBfv8rj3fgj1R3BmRBRA4Oa4mh7ZHtbhVy2J5OSf1jGLzlDh_bYIEIPlllpsGBnIJ6x3ABK99TerSxDmzkys5ndDH1kJ3zLcs2e6m-u6_Sn9MStseJOmhjovYMZCUQgv3yIrcN4PoLgXDIpuSAwoWEYrTS_FITCALbgTpKNLJxQ
+eyJhbGciOiJSUzI1NiIsImtpZCI6IjI1MDgxMWNkYzYwOWQ5MGY5ODE1MTE5MWIyYmM5YmQwY2ViOWMwMDQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vZmlyZXRvZG8tZTk3YTciLCJhdWQiOiJmaXJldG9kby1lOTdhNyIsImF1dGhfdGltZSI6MTU3MzUyMzMyNSwidXNlcl9pZCI6IkdvOTlqejROZE9ka0wxaGgxNHRDdVBQUzhKQjMiLCJzdWIiOiJHbzk5ano0TmRPZGtMMWhoMTR0Q3VQUFM4SkIzIiwiaWF0IjoxNTczNTIzMzI1LCJleHAiOjE1NzM1MjY5MjUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnt9LCJzaWduX2luX3Byb3ZpZGVyIjoiY3VzdG9tIn19.hFlYzFWJuC5d0wUdbGhM5nPyPF9FuzuS6m66TW3XZLdDrRknjM-1iBEC9TMEZlqKyqz0-k-BjfjgGPJeDYXoVRNPqqVRlhJThDWmIC2Z5hrziyU-kqwIiMqsvQsn3Sx4rCRYeblERKtY4bwLcmaAsSwHcSfYeQUzpgVNs0N_WsU9Qb15SubqYKcD4l9TL4qWmcne3fOptdxxDq7PBnvVi1FoUdcf3FLTSqbAOiTr3cuORXwsgwwJtK5iNsJ3ZczVHwgA-r73U_6bvEpDiHyaFF5keERFy0NHhkJIEjy_6I8-DlOOn5o9idDENugmKhRMom0aoaWGDWz8puj5TRxiyA
 """
 
         let app = Application()
@@ -22,7 +22,8 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6IjI1MDgxMWNkYzYwOWQ5MGY5ODE1MTE5MWIyYmM5YmQwY2ViOWMw
 
         try app.boot()
 
-        let result = try TokenVerifier.verify(token, httpClient: app.client, on: app.client.eventLoopGroup.next()).wait()
+        let request = Request(application: app, on: app.make())
+        let result = try TokenVerifier.verify(token, request: request).wait()
         print(result)
 
     }

@@ -17,27 +17,27 @@ public class TokenVerifier {
     private static var cacheExpiryEpoch: TimeInterval = Date.timeIntervalSinceReferenceDate
     
     @discardableResult
-    public class func verify(_ token: String, httpClient: Client, on reqEventLoop: EventLoop) -> EventLoopFuture<FirebaseJWTPayload> {
-        return TokenVerifier.getSigners(httpClient: httpClient).flatMap({ (signers) -> EventLoopFuture<FirebaseJWTPayload> in
+    public class func verify(_ token: String, request: Request) -> EventLoopFuture<FirebaseJWTPayload> {
+        return TokenVerifier.getSigners(request: request).flatMap({ (signers) -> EventLoopFuture<FirebaseJWTPayload> in
             let token = token.removeBearer()
             do {
                 let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: signers)
-                return reqEventLoop.next().makeSucceededFuture(jwt.payload)
+                return request.eventLoop.next().makeSucceededFuture(jwt.payload)
             } catch let error {
-                return reqEventLoop.next().makeFailedFuture(error)
+                return request.eventLoop.makeFailedFuture(error)
             }
         })
     }
 
-    private class func getSigners(httpClient: Client) -> EventLoopFuture<JWTSigners> {
+    private class func getSigners(request: Request) -> EventLoopFuture<JWTSigners> {
 
-        let promise = httpClient.eventLoopGroup.next().makePromise(of: JWTSigners.self)
+        let promise = request.eventLoop.next().makePromise(of: JWTSigners.self)
         if let signers = TokenVerifier.cachedSigners, cacheExpiryEpoch > Date.timeIntervalSinceReferenceDate {
             promise.succeed(signers)
             return promise.futureResult
         }
 
-        httpClient.get(url).whenComplete { (result) in
+        request.client.get(url).whenComplete { (result) in
             switch result {
             case .failure(let error):
                 promise.fail(error)
