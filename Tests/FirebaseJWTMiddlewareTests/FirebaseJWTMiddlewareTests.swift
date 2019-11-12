@@ -22,11 +22,12 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6IjI1MDgxMWNkYzYwOWQ5MGY5ODE1MTE5MWIyYmM5YmQwY2ViOWMw
 
         try app.boot()
 
+        let cache = JWTSignersCache()
         let request = Request(application: app, on: app.make())
-        _ = try TokenVerifier.verify(token, request: request).wait()
+        _ = try TokenVerifier.verify(token, request: request, cache: cache).wait()
 
         // Check return from cache
-        _ = try TokenVerifier.verify(token, request: request).wait()
+        _ = try TokenVerifier.verify(token, request: request, cache: cache).wait()
 
     }
 

@@ -3,7 +3,38 @@ import JWTKit
 
 let FireBaseJWTPayloadKey = "fireWT"
 
+public final class JWTSignersCache {
+
+    private var cachedSigners: JWTSigners?
+    private var cacheExpiryEpoch: TimeInterval = Date.timeIntervalSinceReferenceDate
+
+    var lock: Lock
+
+    init() {
+        self.lock = .init()
+    }
+
+    func get() -> JWTSigners? {
+        self.lock.lock()
+        defer { self.lock.unlock() }
+        if self.cacheExpiryEpoch > Date.timeIntervalSinceReferenceDate {
+            return self.cachedSigners
+        }
+        self.cachedSigners = nil
+        return nil
+    }
+
+    func set(value: JWTSigners, epiryEpoch: TimeInterval) {
+        self.lock.lock()
+        defer { self.lock.unlock() }
+        self.cachedSigners = value
+        self.cacheExpiryEpoch = epiryEpoch
+    }
+}
+
 open class FirebaseJWTMiddleware: Middleware {
+
+    let signersCache = JWTSignersCache()
 
     public init() {}
     
@@ -13,7 +44,7 @@ open class FirebaseJWTMiddleware: Middleware {
             return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: "No Access Token"))
         }
 
-        return TokenVerifier.verify(token, request: request)
+        return TokenVerifier.verify(token, request: request, cache: self.signersCache)
             .flatMap({ (payload) -> EventLoopFuture<Response> in
                 request.userInfo[FireBaseJWTPayloadKey] = payload
                 return next.respond(to: request)

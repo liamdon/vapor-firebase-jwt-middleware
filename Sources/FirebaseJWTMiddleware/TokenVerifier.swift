@@ -10,43 +10,12 @@ import JWTKit
 import OpenCrypto
 
 public class TokenVerifier {
-
-    final class SignersCache {
-
-        private var cachedSigners: JWTSigners?
-        private var cacheExpiryEpoch: TimeInterval = Date.timeIntervalSinceReferenceDate
-
-        var lock: Lock
-
-        init() {
-            self.lock = .init()
-        }
-
-        func get() -> JWTSigners? {
-            self.lock.lock()
-            defer { self.lock.unlock() }
-            if self.cacheExpiryEpoch > Date.timeIntervalSinceReferenceDate {
-                return self.cachedSigners
-            }
-            self.cachedSigners = nil
-            return nil
-        }
-
-        func set(value: JWTSigners, epiryEpoch: TimeInterval) {
-            self.lock.lock()
-            defer { self.lock.unlock() }
-            self.cachedSigners = value
-            self.cacheExpiryEpoch = epiryEpoch
-        }
-    }
-
+    
     static let url = URI(stringLiteral: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
 
-    private static var signersCache = SignersCache()
-    
     @discardableResult
-    public class func verify(_ token: String, request: Request) -> EventLoopFuture<FirebaseJWTPayload> {
-        return TokenVerifier.getSigners(request: request).flatMap({ (signers) -> EventLoopFuture<FirebaseJWTPayload> in
+    public class func verify(_ token: String, request: Request, cache: JWTSignersCache) -> EventLoopFuture<FirebaseJWTPayload> {
+        return TokenVerifier.getSigners(request: request, cache: cache).flatMap({ (signers) -> EventLoopFuture<FirebaseJWTPayload> in
             let token = token.removeBearer()
             do {
                 let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: signers)
@@ -57,10 +26,10 @@ public class TokenVerifier {
         })
     }
 
-    private class func getSigners(request: Request) -> EventLoopFuture<JWTSigners> {
+    private class func getSigners(request: Request, cache: JWTSignersCache) -> EventLoopFuture<JWTSigners> {
 
         let promise = request.eventLoop.next().makePromise(of: JWTSigners.self)
-        if let signers = signersCache.get() {
+        if let signers = cache.get() {
             promise.succeed(signers)
             return promise.futureResult
         }
@@ -82,7 +51,7 @@ public class TokenVerifier {
                     try signers.use(jwksJSON: responseString)
 
                     // Cache signers by max-age if possible
-                    TokenVerifier.cacheSigners(signers, response.headers)
+                    TokenVerifier.cacheSigners(signers, response.headers, cache)
 
                     promise.succeed(signers)
                 } catch let error {
@@ -95,14 +64,14 @@ public class TokenVerifier {
 
     }
 
-    private class func cacheSigners(_ signers: JWTSigners, _ headers: HTTPHeaders) {
+    private class func cacheSigners(_ signers: JWTSigners, _ headers: HTTPHeaders, _ cache: JWTSignersCache) {
         if
               let cacheControlString = headers.firstValue(name: .cacheControl) {
               let maxAgeMatch = cacheControlString.matches(for: #"max-age=(\d+)"#)
 
               if let ageString = maxAgeMatch.first?.replacingOccurrences(of: "max-age=", with: "") {
                 let expiry = Date.timeIntervalSinceReferenceDate + (Double(ageString) ?? 0.0)
-                self.signersCache.set(value: signers, epiryEpoch: expiry)
+                cache.set(value: signers, epiryEpoch: expiry)
               }
           }
     }
