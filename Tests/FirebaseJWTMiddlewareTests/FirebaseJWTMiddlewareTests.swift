@@ -23,8 +23,10 @@ eyJhbGciOiJSUzI1NiIsImtpZCI6IjI1MDgxMWNkYzYwOWQ5MGY5ODE1MTE5MWIyYmM5YmQwY2ViOWMw
         try app.boot()
 
         let request = Request(application: app, on: app.make())
-        let result = try TokenVerifier.verify(token, request: request).wait()
-        print(result)
+        _ = try TokenVerifier.verify(token, request: request).wait()
+
+        // Check return from cache
+        _ = try TokenVerifier.verify(token, request: request).wait()
 
     }
 

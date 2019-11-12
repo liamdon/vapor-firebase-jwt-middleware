@@ -11,10 +11,38 @@ import OpenCrypto
 
 public class TokenVerifier {
 
+    final class SignersCache {
+
+        private var cachedSigners: JWTSigners?
+        private var cacheExpiryEpoch: TimeInterval = Date.timeIntervalSinceReferenceDate
+
+        var lock: Lock
+
+        init() {
+            self.lock = .init()
+        }
+
+        func get() -> JWTSigners? {
+            self.lock.lock()
+            defer { self.lock.unlock() }
+            if self.cacheExpiryEpoch > Date.timeIntervalSinceReferenceDate {
+                return self.cachedSigners
+            }
+            self.cachedSigners = nil
+            return nil
+        }
+
+        func set(value: JWTSigners, epiryEpoch: TimeInterval) {
+            self.lock.lock()
+            defer { self.lock.unlock() }
+            self.cachedSigners = value
+            self.cacheExpiryEpoch = epiryEpoch
+        }
+    }
+
     static let url = URI(stringLiteral: "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
 
-    private static var cachedSigners: JWTSigners?
-    private static var cacheExpiryEpoch: TimeInterval = Date.timeIntervalSinceReferenceDate
+    private static var signersCache = SignersCache()
     
     @discardableResult
     public class func verify(_ token: String, request: Request) -> EventLoopFuture<FirebaseJWTPayload> {
@@ -32,7 +60,7 @@ public class TokenVerifier {
     private class func getSigners(request: Request) -> EventLoopFuture<JWTSigners> {
 
         let promise = request.eventLoop.next().makePromise(of: JWTSigners.self)
-        if let signers = TokenVerifier.cachedSigners, cacheExpiryEpoch > Date.timeIntervalSinceReferenceDate {
+        if let signers = signersCache.get() {
             promise.succeed(signers)
             return promise.futureResult
         }
@@ -73,8 +101,8 @@ public class TokenVerifier {
               let maxAgeMatch = cacheControlString.matches(for: #"max-age=(\d+)"#)
 
               if let ageString = maxAgeMatch.first?.replacingOccurrences(of: "max-age=", with: "") {
-                  TokenVerifier.cacheExpiryEpoch = Date.timeIntervalSinceReferenceDate + (Double(ageString) ?? 0.0)
-                  TokenVerifier.cachedSigners = signers
+                let expiry = Date.timeIntervalSinceReferenceDate + (Double(ageString) ?? 0.0)
+                self.signersCache.set(value: signers, epiryEpoch: expiry)
               }
           }
     }
