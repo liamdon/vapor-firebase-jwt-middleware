@@ -62,9 +62,3 @@ extension Request {
         return self.userInfo[FireBaseJWTPayloadKey] as? FirebaseJWTPayload
     }
 }
-
-enum JWTConfig {
-    static let header = JWTHeader(alg: "RS256", typ: "JWT")
-    static let expirationTime: TimeInterval = 50
-}
-

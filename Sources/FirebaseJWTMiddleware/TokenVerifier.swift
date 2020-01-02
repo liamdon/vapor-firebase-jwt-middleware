@@ -18,8 +18,8 @@ public class TokenVerifier {
         return TokenVerifier.getSigners(request: request, cache: cache).flatMap({ (signers) -> EventLoopFuture<FirebaseJWTPayload> in
             let token = token.removeBearer()
             do {
-                let jwt = try JWT<FirebaseJWTPayload>(from: Array(token.utf8), verifiedBy: signers)
-                return request.eventLoop.next().makeSucceededFuture(jwt.payload)
+                let payload = try signers.verify(Array(token.utf8), as: FirebaseJWTPayload.self)
+                return request.eventLoop.next().makeSucceededFuture(payload)
             } catch let error {
                 return request.eventLoop.makeFailedFuture(error)
             }
