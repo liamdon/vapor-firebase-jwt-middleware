@@ -2,6 +2,7 @@ import Vapor
 import JWTKit
 
 let FireBaseJWTPayloadKey = "fireWT"
+public let FireBaseJWTTestUserIdKey = "fireTestUserId"
 
 public final class JWTSignersCache {
 
@@ -39,6 +40,12 @@ open class FirebaseJWTMiddleware: Middleware {
     public init() {}
     
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+
+        guard request.application.environment.name != "testing" else {
+            let payload = FirebaseJWTPayload(issuer: IssuerClaim(value: ""), issuedAt: IssuedAtClaim(value: Date()), expirationAt: ExpirationClaim(value: Date().addingTimeInterval(86400)), userID: (request.userInfo[FireBaseJWTTestUserIdKey] as? String) ?? "12345")
+            request.userInfo[FireBaseJWTPayloadKey] = payload
+            return next.respond(to: request)
+        }
 
         guard let token = request.headers[.authorization].first else {
             return request.eventLoop.makeFailedFuture(Abort(.unauthorized, reason: "No Access Token"))
