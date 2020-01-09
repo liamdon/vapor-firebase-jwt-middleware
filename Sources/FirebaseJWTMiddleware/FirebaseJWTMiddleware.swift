@@ -42,7 +42,7 @@ open class FirebaseJWTMiddleware: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
 
         guard request.application.environment.name != "testing" else {
-            let payload = FirebaseJWTPayload(issuer: IssuerClaim(value: ""), issuedAt: IssuedAtClaim(value: Date()), expirationAt: ExpirationClaim(value: Date().addingTimeInterval(86400)), userID: (request.userInfo[FireBaseJWTTestUserIdKey] as? String) ?? "12345")
+            let payload = FirebaseJWTPayload(issuer: IssuerClaim(value: ""), issuedAt: IssuedAtClaim(value: Date()), expirationAt: ExpirationClaim(value: Date().addingTimeInterval(86400)), userID: request.headers[.authorization].first ?? "12345")
             request.userInfo[FireBaseJWTPayloadKey] = payload
             return next.respond(to: request)
         }
